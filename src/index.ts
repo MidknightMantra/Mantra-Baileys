@@ -11,3 +11,6 @@ export * from './WAUSync/index'
 export type WASocket = ReturnType<typeof makeWASocket>
 export { makeWASocket }
 export default makeWASocket
+
+export { ApiServer } from './Server/api'
+export type { ApiServerConfig } from './Server/api'
