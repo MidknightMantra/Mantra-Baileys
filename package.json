@@ -49,6 +49,7 @@
     "async-mutex": "^0.5.0",
     "libsignal": "git+https://github.com/whiskeysockets/libsignal-node",
     "lru-cache": "^11.1.0",
+    "marked": "^17.0.3",
     "music-metadata": "^11.7.0",
     "p-queue": "^9.0.0",
     "pino": "^9.6",
