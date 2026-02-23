@@ -1,4 +1,6 @@
 import * as http from 'http'
+import * as fs from 'fs'
+import * as path from 'path'
 import QRCode from 'qrcode'
 import { SessionManager } from '../Utils/session-manager.js'
 import type { ILogger } from '../Utils/logger'
@@ -124,6 +126,42 @@ export class ApiServer {
                         res.setHeader('Content-Type', 'text/html; charset=utf-8')
                         res.statusCode = 200
                         res.end(this._buildDashboard())
+                        return
+                }
+
+                // Docs — serve markdown files as styled HTML
+                if (method === 'GET' && url.startsWith('/docs/')) {
+                        const filename = path.basename(url)
+                        const filepath = path.join(process.cwd(), 'docs', filename)
+                        if (!filename.endsWith('.md') || !fs.existsSync(filepath)) {
+                                res.statusCode = 404
+                                res.setHeader('Content-Type', 'text/plain')
+                                res.end('Not found')
+                                return
+                        }
+                        const content = fs.readFileSync(filepath, 'utf8')
+                        const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+                        res.statusCode = 200
+                        res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${filename}</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:860px;margin:40px auto;padding:0 20px;line-height:1.7;color:#e2e8f0;background:#0f172a}
+  pre{background:#1e293b;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px}
+  code{background:#1e293b;padding:2px 5px;border-radius:4px;font-size:13px}
+  pre code{background:none;padding:0}
+  a{color:#38bdf8}
+  h1,h2,h3{color:#f1f5f9;margin-top:2em}
+  h1{border-bottom:1px solid #334155;padding-bottom:.4em}
+  h2{border-bottom:1px solid #1e293b;padding-bottom:.3em}
+  .nav{margin-bottom:2em;font-size:.9em}
+</style></head><body>
+<div class="nav"><a href="/">← Dashboard</a> &nbsp;·&nbsp;
+  <a href="/docs/getting-started.md">Getting Started</a> &nbsp;·&nbsp;
+  <a href="/docs/api-reference.md">API Reference</a> &nbsp;·&nbsp;
+  <a href="/docs/utilities.md">Utilities</a>
+</div>
+<pre>${escaped}</pre>
+</body></html>`)
                         return
                 }
 
