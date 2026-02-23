@@ -1,24 +1,46 @@
 {
-  "name": "baileys",
+  "name": "@mantra/baileys",
   "type": "module",
-  "version": "7.0.0-rc.9",
-  "description": "A WebSockets library for interacting with WhatsApp Web",
+  "version": "1.0.0",
+  "description": "Production-ready WhatsApp Web library with multi-session management, REST API gateway, anti-ban protection, webhooks, conversation flows, and a live dashboard",
   "keywords": [
     "whatsapp",
-    "automation"
+    "whatsapp-web",
+    "baileys",
+    "whatsapp-bot",
+    "whatsapp-gateway",
+    "whatsapp-api",
+    "multi-session",
+    "automation",
+    "webhook",
+    "rest-api"
   ],
-  "homepage": "https://github.com/WhiskeySockets/Baileys/",
-  "repository": {
-    "url": "git@github.com:WhiskeySockets/Baileys.git"
-  },
   "license": "MIT",
-  "author": "Rajeh Taher",
+  "author": "mantra",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "bin": {
+    "baileys": "./lib/Server/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    },
+    "./server": {
+      "import": "./lib/Server/api.js",
+      "types": "./lib/Server/api.d.ts"
+    },
+    "./session-manager": {
+      "import": "./lib/Utils/session-manager.js",
+      "types": "./lib/Utils/session-manager.d.ts"
+    }
+  },
   "files": [
     "lib/**/*",
     "WAProto/**/*",
-    "engine-requirements.js"
+    "engine-requirements.js",
+    "docs/**/*"
   ],
   "scripts": {
     "build:all": "npm run build && npm run build:docs",

@@ -14,3 +14,5 @@ export default makeWASocket
 
 export { ApiServer } from './Server/api'
 export type { ApiServerConfig } from './Server/api'
+export { SessionManager } from './Utils/session-manager'
+export type { SessionManagerConfig, SessionInfo, SessionStatus, SessionEvents } from './Utils/session-manager'
