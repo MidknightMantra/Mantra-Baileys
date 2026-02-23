@@ -1,4 +1,5 @@
 import * as http from 'http'
+import QRCode from 'qrcode'
 import { SessionManager } from '../Utils/session-manager.js'
 import type { ILogger } from '../Utils/logger'
 import type { AnyMessageContent } from '../Types'
@@ -95,6 +96,9 @@ export class ApiServer {
                 // Chats
                 this._route('POST', '/sessions/:id/chats/:jid/archive', this._archiveChat.bind(this))
                 this._route('POST', '/sessions/:id/chats/:jid/mute', this._muteChat.bind(this))
+
+                // QR image
+                this._route('GET', '/sessions/:id/qr.png', this._getQRImage.bind(this))
 
                 // Health
                 this._route('GET', '/health', this._health.bind(this))
@@ -538,6 +542,25 @@ export class ApiServer {
                 this._respond(res, 200, { ok: true })
         }
 
+        private async _getQRImage(
+                _req: http.IncomingMessage,
+                res: http.ServerResponse,
+                { id }: { id: string }
+        ): Promise<void> {
+                const info = this.manager.getInfo(id)
+                if (!info) return this._respond(res, 404, { error: 'Session not found' })
+                if (!info.qr) {
+                        res.statusCode = 204
+                        res.end()
+                        return
+                }
+                const png = await QRCode.toBuffer(info.qr, { width: 300, margin: 2, errorCorrectionLevel: 'L' })
+                res.setHeader('Content-Type', 'image/png')
+                res.setHeader('Cache-Control', 'no-store')
+                res.statusCode = 200
+                res.end(png)
+        }
+
         private async _health(_req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
                 this._respond(res, 200, {
                         status: 'ok',
@@ -570,7 +593,7 @@ export class ApiServer {
                                 const color = statusColor[s.status] ?? '#6b7280'
                                 const qrSection = s.qr
                                         ? `<div class="qr-wrap">
-                                                <canvas id="qr-${s.id}" class="qr-canvas"></canvas>
+                                                <img src="/sessions/${s.id}/qr.png" class="qr-img" alt="QR code"/>
                                                 <p class="qr-hint">Scan with WhatsApp</p>
                                            </div>`
                                         : ''
@@ -599,7 +622,6 @@ export class ApiServer {
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Baileys API</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:24px}
@@ -618,7 +640,7 @@ export class ApiServer {
   .meta{font-size:.8rem;color:#94a3b8;margin-bottom:10px}
   .meta .name{font-weight:600;color:#cbd5e1;margin-left:8px}
   .qr-wrap{text-align:center;margin:12px 0}
-  .qr-canvas{border-radius:8px;background:#fff;padding:8px}
+  .qr-img{border-radius:8px;background:#fff;padding:8px;width:220px;height:220px;display:block;margin:0 auto}
   .qr-hint{font-size:.75rem;color:#64748b;margin-top:6px}
   .error-msg{font-size:.75rem;color:#f87171;margin-top:6px;padding:6px 10px;background:#450a0a33;border-radius:6px}
   .empty{color:#475569;font-size:.9rem;grid-column:1/-1;padding:24px;text-align:center;border:1px dashed #334155;border-radius:10px}
@@ -699,7 +721,7 @@ async function refresh() {
     }
     grid.innerHTML = sessions.map(s => {
       const color = STATUS_COLOR[s.status] || '#6b7280'
-      const qr = s.qr ? \`<div class="qr-wrap"><canvas id="qr-\${s.id}" class="qr-canvas"></canvas><p class="qr-hint">Scan with WhatsApp</p></div>\` : ''
+      const qr = s.qr ? \`<div class="qr-wrap"><img src="/sessions/\${s.id}/qr.png?t=\${Date.now()}" class="qr-img" alt="QR"/><p class="qr-hint">Scan with WhatsApp</p></div>\` : ''
       const meta = s.status === 'connected' ? \`<div class="meta"><span>\${s.phoneNumber || ''}</span>\${s.name ? '<span class="name">'+s.name+'</span>' : ''}</div>\` : ''
       const err = s.error ? \`<div class="error-msg">\${s.error}</div>\` : ''
       return \`<div class="card">
@@ -711,16 +733,11 @@ async function refresh() {
         <button class="btn-delete" onclick="deleteSession('\${s.id}')">Delete</button>
       </div>\`
     }).join('')
-
-    // Render QR codes
-    sessions.filter(s => s.qr).forEach(s => {
-      const canvas = document.getElementById('qr-' + s.id)
-      if (canvas) QRCode.toCanvas(canvas, s.qr, { width: 200, margin: 1, errorCorrectionLevel: 'M' }, () => {})
-    })
   } catch {}
 }
 
-setInterval(refresh, 3000)
+// Call immediately once scripts are loaded, then every 3s
+window.addEventListener('load', () => { refresh(); setInterval(refresh, 3000) })
 </script>
 </body>
 </html>`
