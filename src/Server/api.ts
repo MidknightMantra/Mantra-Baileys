@@ -680,7 +680,7 @@ export class ApiServer {
 <h2>Sessions</h2>
 <div class="sessions" id="sessions-grid">${sessionCards}</div>
 
-<p class="refresh-note">Auto-refreshes every 3 s</p>
+<p class="refresh-note">Auto-refreshes every 10 s</p>
 <div class="footer">Baileys fork · <a href="/docs/getting-started.md">docs</a></div>
 
 <script>
