@@ -736,8 +736,8 @@ async function refresh() {
   } catch {}
 }
 
-// Call immediately once scripts are loaded, then every 3s
-window.addEventListener('load', () => { refresh(); setInterval(refresh, 3000) })
+// Call immediately once scripts are loaded, then every 10s
+window.addEventListener('load', () => { refresh(); setInterval(refresh, 10000) })
 </script>
 </body>
 </html>`
